@@ -1,23 +1,38 @@
 import { GraphQLServer } from 'graphql-yoga';
 
+/**
+ * Five GraphQL scalar types:
+ * String, Boolean, Int, Float, ID
+ */
+
 // Type definitions (Schema)
 const typeDefs = /* GraphQL */ `
   type Query {
-    # Exclamation mark: Required return; cannot return null
-    hello: String!
+    id: ID!
     name: String!
+    age: Int!
+    employed: Boolean!
+    gpa: Float
   }
 `;
 
 // Resolvers
 const resolvers = {
   Query: {
-    // ES6 method definition
-    hello() {
-      return 'This is a hello query!';
+    id() {
+      return 'abc123';
     },
     name() {
-      return 'Luke Fiji';
+      return 'Luke';
+    },
+    age() {
+      return 25;
+    },
+    employed() {
+      return true;
+    },
+    gpa() {
+      return null;
     }
   }
 };
@@ -29,5 +44,5 @@ const server = new GraphQLServer({
 
 server.start(() => {
   // This callback runs when server is up & running
-  console.log('Server started.');
+  console.log('Server is running on localhost:4000');
 });
