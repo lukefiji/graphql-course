@@ -31,19 +31,22 @@ const posts = [
     id: '1',
     title: 'First Post',
     body: 'This is my first dream',
-    published: true
+    published: true,
+    author: '1'
   },
   {
     id: '2',
     title: 'Second Scene',
     body: 'This is my second post',
-    published: true
+    published: true,
+    author: '1'
   },
   {
     id: '3',
     title: 'Third Dream',
     body: 'This is my third scene',
-    published: false
+    published: false,
+    author: '2'
   }
 ];
 
@@ -68,6 +71,7 @@ const typeDefs = /* GraphQL */ `
     title: String!
     body: String!
     published: Boolean!
+    author: User!
   }
 `;
 
@@ -118,6 +122,11 @@ const resolvers = {
           post.body.toLowerCase().includes(normalizedQuery)
         );
       });
+    }
+  },
+  Post: {
+    author(parent, args, ctx, info) {
+      return users.find(user => user.id === parent.author);
     }
   }
 };
