@@ -5,14 +5,55 @@ import { GraphQLServer } from 'graphql-yoga';
  * String, Boolean, Int, Float, ID
  */
 
+// Demo user data
+const users = [
+  {
+    id: '1',
+    name: 'Luke',
+    email: 'Luke@email.com'
+  },
+  {
+    id: '2',
+    name: 'Lukie Luke',
+    email: 'LukieLuke@email.com',
+    age: 26
+  },
+  {
+    id: '2',
+    name: "What's Gewde",
+    email: 'NotYourAverage@email.com',
+    age: 22
+  }
+];
+
+const posts = [
+  {
+    id: '1',
+    title: 'First Post',
+    body: 'This is my first dream',
+    published: true
+  },
+  {
+    id: '2',
+    title: 'Second Scene',
+    body: 'This is my second post',
+    published: true
+  },
+  {
+    id: '3',
+    title: 'Third Dream',
+    body: 'This is my third scene',
+    published: false
+  }
+];
+
 // Type definitions (Schema)
 const typeDefs = /* GraphQL */ `
   type Query {
-    greeting(name: String, position: String): String!
-    add(numbers: [Float!]!): Float!
-    grades: [Int!]!
     me: User!
     post: Post!
+    posts(query: String): [Post!]!
+    users(query: String): [User!]!
   }
 
   type User {
@@ -39,11 +80,6 @@ const resolvers = {
      * Context - contextual data
      * Info - info sent along to the sever
      */
-    greeting(parent, args, ctx, info) {
-      return args.name && args.position
-        ? `Hello ${args.name}! You are an awesome ${args.position}!`
-        : 'Hello!';
-    },
     me() {
       return {
         id: '000001',
@@ -59,13 +95,29 @@ const resolvers = {
         published: true
       };
     },
-    add(parent, args, ctx, info) {
-      return args.numbers.reduce((acc, current) => {
-        return acc + current;
-      }, 0);
+    users(parent, args, ctx, info) {
+      if (!args.query) {
+        return users;
+      }
+
+      // Filter users by name
+      return users.filter(user => {
+        return user.name.toLowerCase().includes(args.query.toLowerCase());
+      });
     },
-    grades(parent, args, ctx, info) {
-      return [42, 69, 99];
+    posts(parent, { query }, ctx, info) {
+      if (!query) {
+        return posts;
+      }
+
+      const normalizedQuery = query.toLowerCase();
+
+      return posts.filter(post => {
+        return (
+          post.title.toLowerCase().includes(normalizedQuery) ||
+          post.body.toLowerCase().includes(normalizedQuery)
+        );
+      });
     }
   }
 };
