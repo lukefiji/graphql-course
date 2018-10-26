@@ -8,6 +8,8 @@ import { GraphQLServer } from 'graphql-yoga';
 // Type definitions (Schema)
 const typeDefs = /* GraphQL */ `
   type Query {
+    greeting(name: String, position: String): String!
+    add(a: Float!, b: Float!): Float!
     me: User!
     post: Post!
   }
@@ -30,6 +32,17 @@ const typeDefs = /* GraphQL */ `
 // Resolvers
 const resolvers = {
   Query: {
+    /**
+     * Parent - helpful when working /w relational data
+     * Args - arguments
+     * Context - contextual data
+     * Info - info sent along to the sever
+     */
+    greeting(parent, args, ctx, info) {
+      return args.name && args.position
+        ? `Hello ${args.name}! You are an awesome ${args.position}!`
+        : 'Hello!';
+    },
     me() {
       return {
         id: '000001',
@@ -44,6 +57,9 @@ const resolvers = {
         body: 'This is the first post. Awesome!',
         published: true
       };
+    },
+    add(parent, args, ctx, info) {
+      return args.a + args.b;
     }
   }
 };
