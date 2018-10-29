@@ -1,5 +1,5 @@
 import { GraphQLServer } from 'graphql-yoga';
-
+import uuidv4 from 'uuid/v4';
 /**
  * Five GraphQL scalar types:
  * String, Boolean, Int, Float, ID
@@ -87,6 +87,10 @@ const typeDefs = /* GraphQL */ `
     comments: [Comment!]!
   }
 
+  type Mutation {
+    createUser(name: String!, email: String!, age: Int): User!
+  }
+
   type User {
     id: ID!
     name: String!
@@ -163,6 +167,28 @@ const resolvers = {
     },
     comments(parent, query, ctx, info) {
       return comments;
+    }
+  },
+  // Mutation is CUD in CRUD
+  Mutation: {
+    createUser(parent, { name, email, age }, ctx, info) {
+      const emailTaken = users.some(user => user.email === email);
+
+      if (emailTaken) {
+        // Errors get sent back to the client
+        throw new Error('Email is already in use');
+      }
+
+      const user = {
+        id: uuidv4(),
+        name,
+        email,
+        age
+      };
+
+      users.push(user);
+
+      return user;
     }
   },
   Post: {
