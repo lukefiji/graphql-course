@@ -50,6 +50,25 @@ const posts = [
   }
 ];
 
+const comments = [
+  {
+    id: '1',
+    text: 'First post!'
+  },
+  {
+    id: '2',
+    text: 'This is so cool!'
+  },
+  {
+    id: '3',
+    text: 'Thanks for sharing.'
+  },
+  {
+    id: '4',
+    text: 'I agree with everything you said.'
+  }
+];
+
 // Type definitions (Schema)
 const typeDefs = /* GraphQL */ `
   type Query {
@@ -57,6 +76,7 @@ const typeDefs = /* GraphQL */ `
     post: Post!
     posts(query: String): [Post!]!
     users(query: String): [User!]!
+    comments: [Comment!]!
   }
 
   type User {
@@ -73,6 +93,11 @@ const typeDefs = /* GraphQL */ `
     body: String!
     published: Boolean!
     author: User!
+  }
+
+  type Comment {
+    id: ID!
+    text: String!
   }
 `;
 
@@ -123,6 +148,9 @@ const resolvers = {
           post.body.toLowerCase().includes(normalizedQuery)
         );
       });
+    },
+    comments(parent, query, ctx, info) {
+      return comments;
     }
   },
   Post: {
