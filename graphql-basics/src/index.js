@@ -1,5 +1,6 @@
 import { GraphQLServer } from 'graphql-yoga';
 import uuidv4 from 'uuid/v4';
+import { UniqueDirectivesPerLocation } from 'graphql/validation/rules/UniqueDirectivesPerLocation';
 /**
  * Five GraphQL scalar types:
  * String, Boolean, Int, Float, ID
@@ -89,6 +90,13 @@ const typeDefs = /* GraphQL */ `
 
   type Mutation {
     createUser(name: String!, email: String!, age: Int): User!
+    createPost(
+      title: String!
+      body: String!
+      published: Boolean!
+      author: ID!
+    ): Post!
+    createComment(text: String!, author: ID!, post: ID!): Comment!
   }
 
   type User {
@@ -141,14 +149,14 @@ const resolvers = {
         published: true
       };
     },
-    users(parent, args, ctx, info) {
-      if (!args.query) {
+    users(parent, { query }, ctx, info) {
+      if (!query) {
         return users;
       }
 
       // Filter users by name
       return users.filter(user => {
-        return user.name.toLowerCase().includes(args.query.toLowerCase());
+        return user.name.toLowerCase().includes(query.toLowerCase());
       });
     },
     posts(parent, { query }, ctx, info) {
@@ -189,6 +197,50 @@ const resolvers = {
       users.push(user);
 
       return user;
+    },
+    createPost(parent, { title, body, published, author }, ctx, info) {
+      const userExists = users.some(user => user.id === author);
+
+      if (!userExists) {
+        throw new Error('User not found');
+      }
+
+      const post = {
+        id: uuidv4(),
+        title,
+        body,
+        published,
+        author
+      };
+
+      posts.push(post);
+
+      return post;
+    },
+    createComment(parent, { text, author, post: postId }, ctx, info) {
+      const userExists = users.some(user => user.id === author);
+      const postExists = posts.some(
+        post => post.id === postId && post.published
+      );
+
+      if (!userExists) {
+        throw new Error('User not found');
+      }
+
+      if (!postExists) {
+        throw new Error('Post not found');
+      }
+
+      const comment = {
+        id: uuidv4(),
+        text,
+        author,
+        post: postId
+      };
+
+      comments.push(comment);
+
+      return comment;
     }
   },
   Post: {
