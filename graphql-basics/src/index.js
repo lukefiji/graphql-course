@@ -179,8 +179,8 @@ const resolvers = {
   },
   // Mutation is CUD in CRUD
   Mutation: {
-    createUser(parent, { name, email, age }, ctx, info) {
-      const emailTaken = users.some(user => user.email === email);
+    createUser(parent, args, ctx, info) {
+      const emailTaken = users.some(user => user.email === args.email);
 
       if (emailTaken) {
         // Errors get sent back to the client
@@ -189,17 +189,15 @@ const resolvers = {
 
       const user = {
         id: uuidv4(),
-        name,
-        email,
-        age
+        ...args
       };
 
       users.push(user);
 
       return user;
     },
-    createPost(parent, { title, body, published, author }, ctx, info) {
-      const userExists = users.some(user => user.id === author);
+    createPost(parent, args, ctx, info) {
+      const userExists = users.some(user => user.id === args.author);
 
       if (!userExists) {
         throw new Error('User not found');
@@ -207,20 +205,17 @@ const resolvers = {
 
       const post = {
         id: uuidv4(),
-        title,
-        body,
-        published,
-        author
+        ...args
       };
 
       posts.push(post);
 
       return post;
     },
-    createComment(parent, { text, author, post: postId }, ctx, info) {
-      const userExists = users.some(user => user.id === author);
+    createComment(parent, args, ctx, info) {
+      const userExists = users.some(user => user.id === args.author);
       const postExists = posts.some(
-        post => post.id === postId && post.published
+        post => post.id === args.post && post.published
       );
 
       if (!userExists) {
@@ -233,9 +228,7 @@ const resolvers = {
 
       const comment = {
         id: uuidv4(),
-        text,
-        author,
-        post: postId
+        ...args
       };
 
       comments.push(comment);
