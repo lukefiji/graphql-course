@@ -7,7 +7,7 @@ import { UniqueDirectivesPerLocation } from 'graphql/validation/rules/UniqueDire
  */
 
 // Demo user data
-const users = [
+let users = [
   {
     id: '1',
     name: 'Luke',
@@ -27,7 +27,7 @@ const users = [
   }
 ];
 
-const posts = [
+let posts = [
   {
     id: '1',
     title: 'First Post',
@@ -51,7 +51,7 @@ const posts = [
   }
 ];
 
-const comments = [
+let comments = [
   {
     id: '1',
     text: 'First post!',
@@ -91,6 +91,7 @@ const typeDefs = /* GraphQL */ `
   type Mutation {
     # Input types can only be referenced in arguments
     createUser(data: CreateUserInput): User!
+    deleteUser(id: ID!): User!
     createPost(data: CreatePostInput): Post!
     createComment(data: CreateCommentInput): Comment!
   }
@@ -211,6 +212,33 @@ const resolvers = {
       users.push(user);
 
       return user;
+    },
+    deleteUser(parent, args, ctx, info) {
+      const userIndex = users.findIndex(user => user.id === args.id);
+
+      if (userIndex === -1) {
+        throw new Error('User not found');
+      }
+
+      // Make sure to keep in mind all associated data - the user's posts and comments
+      const deletedUsers = users.splice(userIndex, 1);
+
+      // Delete all of the User's posts and its associated comments
+      posts = posts.filter(post => {
+        const match = post.author === args.id;
+
+        if (match) {
+          // Comb throuch all comments and delete ones that match the post
+          comments = comments.filter(comment => comment.post !== post.id);
+        }
+        // Only return posts that don't match
+        return !match;
+      });
+
+      // Remove all comments by the user
+      comments = comments.filter(comment => comment.author !== args.id);
+
+      return deletedUsers[0];
     },
     createPost(parent, args, ctx, info) {
       const userExists = users.some(user => user.id === args.data.author);
