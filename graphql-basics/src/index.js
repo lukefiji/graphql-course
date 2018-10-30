@@ -93,7 +93,9 @@ const typeDefs = /* GraphQL */ `
     createUser(data: CreateUserInput): User!
     deleteUser(id: ID!): User!
     createPost(data: CreatePostInput): Post!
+    deletePost(id: ID!): Post!
     createComment(data: CreateCommentInput): Comment!
+    deleteComment(id: ID!): Comment!
   }
 
   # Naming covention: Action, Object, Type
@@ -256,6 +258,21 @@ const resolvers = {
 
       return post;
     },
+    deletePost(parent, args, cts, info) {
+      const postIndex = posts.findIndex(post => post.id === args.id);
+
+      if (postIndex === -1) {
+        throw new Error('Post not found');
+      }
+
+      // Remove matching post and store it to return
+      const deletedPost = posts.splice(postIndex, 1);
+
+      // Remove the post's comments
+      comments = comments.filter(comment => comment.post !== args.id);
+
+      return deletedPost[0];
+    },
     createComment(parent, args, ctx, info) {
       const userExists = users.some(user => user.id === args.data.author);
       const postExists = posts.some(
@@ -278,6 +295,19 @@ const resolvers = {
       comments.push(comment);
 
       return comment;
+    },
+    deleteComment(parent, args, ctx, info) {
+      const commentIndex = comments.findIndex(
+        comment => comment.id === args.id
+      );
+
+      if (commentIndex === -1) {
+        throw new Error('Comment not found');
+      }
+
+      const deletedComment = comments.splice(commentIndex, 1);
+
+      return deletedComment[0];
     }
   },
   Post: {
