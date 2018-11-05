@@ -19,6 +19,11 @@ type Mutation {
   updateComment(id: ID!, data: UpdateCommentInput!): Comment!
 }
 
+type Subscription {
+  count: Int!
+  comment(postId: ID!): Comment!
+}
+
 # Naming covention: Action, Object, Type
 input CreateUserInput {
   name: String!
