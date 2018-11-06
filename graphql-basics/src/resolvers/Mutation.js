@@ -90,12 +90,18 @@ const Mutation = {
 
     // Only display if published
     if (args.data.published) {
-      pubsub.publish('post', { post });
+      pubsub.publish('post', {
+        // Matches Subscription schema
+        post: {
+          mutation: 'CREATED',
+          data: post
+        }
+      });
     }
 
     return post;
   },
-  deletePost(parent, args, { db }, info) {
+  deletePost(parent, args, { db, pubsub }, info) {
     const postIndex = db.posts.findIndex(post => post.id === args.id);
 
     if (postIndex === -1) {
@@ -103,16 +109,27 @@ const Mutation = {
     }
 
     // Remove matching post and store it to return
-    const deletedPost = db.posts.splice(postIndex, 1);
+    const [post] = db.posts.splice(postIndex, 1);
 
     // Remove the post's comments
     db.comments = db.comments.filter(comment => comment.post !== args.id);
 
-    return deletedPost[0];
+    // Make sure post is published before sending information out
+    if (post.published) {
+      pubsub.publish('post', {
+        post: {
+          mutation: 'DELETED',
+          data: post
+        }
+      });
+    }
+
+    return post;
   },
-  updatePost(parent, args, { db }, info) {
+  updatePost(parent, args, { db, pubsub }, info) {
     const { id, data } = args;
     const post = db.posts.find(post => post.id === id);
+    const originalPost = { ...post };
 
     if (!post) {
       throw new Error('Post not found');
@@ -128,6 +145,32 @@ const Mutation = {
 
     if (typeof data.published === 'boolean') {
       post.published = data.published;
+
+      if (originalPost.published && !post.published) {
+        // Published -> Unpublished: Delete
+        pubsub.publish('post', {
+          post: {
+            mutation: 'DELETED',
+            data: originalPost // Gets rid using old data without showing new
+          }
+        });
+      } else if (!originalPost.published && post.published) {
+        // Published -> Unpublished: Create
+        pubsub.publish('post', {
+          post: {
+            mutation: 'CREATED',
+            data: post
+          }
+        });
+      } else if (post.published) {
+        // Published -> Published: Update
+        pubsub.publish('post', {
+          post: {
+            mutation: 'UPDATED',
+            data: post
+          }
+        });
+      }
     }
 
     return post;
